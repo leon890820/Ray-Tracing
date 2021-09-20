@@ -5,6 +5,5 @@
 https://raytracing.github.io/books/RayTracingInOneWeekend.html
 
 ![](Ray_Tracing/data/rayTracingFinalSnece.png)
-![](Ray_Tracing/data/rayTracing.png)
-![](Ray_Tracing/data/rayTrachingcornell.png)
-![](Ray_Tracing/data/rayTracingSence.png)
+![](Ray_Tracing/data/rayTrachingCornellBox.png.png)
+![](Ray_Tracing/data/rayTraching4K.png.png)
