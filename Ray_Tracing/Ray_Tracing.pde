@@ -1,10 +1,12 @@
 import java.util.*;
 
 float ratio=(float)9/(float)9;
-float img_width=800;
+float img_width=200;
 int max_depth=50;
 int samples_per_pixel=10;
-int type=1;
+int type=5;
+Vec3 scale_vector;
+Vec3 translate_vector;
 
 int count=0;
 
@@ -19,6 +21,8 @@ Vec3 lookat=new Vec3(0,0,0);
 Vec3 vup=new Vec3(0,1,0);
 float dist_to_focus=(10);
 float aperture=0.1;
+ArrayList<Mesh> meshes;
+Mesh teapot;
 
 hittable_list world;
 
@@ -40,7 +44,10 @@ void setup() {
   startTime=(year() + "年" + month() +"月" + day() +"日"+hour()+":"+minute()+":"+second());
   float vfov = 40.0;
   float aperture = 0.0;
-  
+  scale_vector=new Vec3(50,50,50);
+  translate_vector=new Vec3(3,0,3);
+  meshes=new ArrayList<Mesh>();
+  teapot=addMeshObject("teapot.asc");
   //world.add(new Sphere(new Vec3(-R,0,-1),R,ml));
   //world.add(new Sphere(new Vec3(R,0,-1),R,mr));
   switch(type){
@@ -109,7 +116,28 @@ void setup() {
       lookat =new Vec3(0, 0, 0);
       vfov = 20.0;
       break;
-    
+    case 9:
+      world=spot_cow();
+      backgroundColor=new Vec3(0.7,0.8,1.0);
+      lookfrom = new Vec3(2*2,-13*2,3*2);
+      lookat = new Vec3(0,0,0);
+      vfov = 20.0;
+      break;
+    case 10:
+      world=triangle_spot();
+      backgroundColor=new Vec3(0,0,0);
+      lookfrom = new Vec3(26,3,0);
+      lookat = new Vec3(0,0,0);
+      vfov = 20.0;      
+      break;
+    case 11:
+      world=teapot_scence();
+      backgroundColor=new Vec3(0,0,0);
+      lookfrom =new Vec3(278, 278, -750);
+      lookat =new Vec3(278, 278, 0);
+      vfov = 20.0;      
+      break;
+      
   }
     
    camera=new Camera(lookfrom,lookat,vup,vfov,ratio,aperture,dist_to_focus,0,1);
@@ -310,6 +338,29 @@ hittable_list finalScene(){
   
   return world; 
 }
+hittable_list triangle_spot(){
+  hittable_list world=new hittable_list();
+  //Material light=new DiffuseLight(new Vec3(7,7,7));
+  Vec3 T1=new Vec3(6,1,-4);
+  Vec3 T2=new Vec3(6,6,-4);
+  Vec3 T3=new Vec3(-6,1,-4);
+  
+  Vec3 T11=new Vec3(6,1,4);
+  Vec3 T12=new Vec3(6,6,4);
+  Vec3 T13=new Vec3(-6,1,4);
+  
+  
+  Texture ct=new CheckerTexture(new Vec3(0.5,0.1,0.6),new Vec3(0.8,0.8,0.9));
+  //world.add(new Sphere(new Vec3(0,-1000,0),1000,new Lambertian(ct)));
+  world.add(new Sphere(new Vec3(0,2,0),2,new Lambertian(ct)));
+  Material difflight=new DiffuseLight(new Vec3(4,4,4));
+  world.add(new Triangle(T1,T2,T3,difflight));
+  world.add(new Triangle(T11,T12,T13,difflight));
+  return world;
+
+}
+
+
 
 hittable_list cornellBoxSmoke(){
   hittable_list world=new hittable_list();
@@ -340,8 +391,7 @@ hittable_list cornellBoxSmoke(){
   return world; 
 }
 
-
-hittable_list cornellBox(){
+hittable_list teapot_scence(){
   hittable_list world=new hittable_list();
   
   Material red=new Lambertian(new Vec3(0.65,0.05,0.05));
@@ -359,13 +409,64 @@ hittable_list cornellBox(){
   Hittable box1=new Box(new Vec3(0,0,0),new Vec3(165,330,165),white);
   box1=new RotateY(box1,15);
   box1=new Translate(box1,new Vec3(265,0,295));
-  world.add(box1);
+  //world.add(box1);
   
   Hittable box2=new Box(new Vec3(0,0,0),new Vec3(165,165,165),white);
   box2=new RotateY(box2,-18);
   box2=new Translate(box2,new Vec3(130,0,65));
-  world.add(box2);
+  //world.add(box2);
   
+  //addMeshToWorld(world,teapot,red);
+  
+  return world; 
+  
+  
+}
+void addMeshToWorld(hittable_list world,Mesh mesh,Material mtr){
+  count=0;
+  for(int i=0;i<mesh.number.length;i+=1){
+    if(mesh.number[i]!=3){
+      count+=mesh.number[i];
+      continue;
+    }
+    Vec3 T1=mesh.verties[mesh.triangles[count]];
+    Vec3 T2=mesh.verties[mesh.triangles[count+1]];
+    Vec3 T3=mesh.verties[mesh.triangles[count+2]];
+    count+=mesh.number[i];
+    
+    world.add(new Triangle(T1,T2,T3,mtr));
+    
+  }
+}
+
+
+hittable_list cornellBox(){
+  hittable_list world=new hittable_list();
+  
+  Material red=new Lambertian(new Vec3(0.65,0.05,0.05));
+  Material green=new Lambertian(new Vec3(0.12,0.45,0.15));
+  Material blue=new Lambertian(new Vec3(0.12,0.12,0.65));
+  Material white=new Lambertian(new Vec3(0.73,0.73,0.73));
+  Material light=new DiffuseLight(new Vec3(15,15,15));
+  
+  world.add(new YzRect(0,555,0,555,555,green));
+  world.add(new YzRect(0,555,0,555,0,red));
+  world.add(new XzRect(148, 408, 162, 397, 554,light));
+  world.add(new XzRect(0,555,0,555,0,white));
+  world.add(new XzRect(0,555,0,555,555,white));
+  world.add(new XyRect(0,555,0,555,555,white));
+  
+  Hittable box1=new Box(new Vec3(0,0,0),new Vec3(165,330,165),white);
+  box1=new RotateY(box1,15);
+  box1=new Translate(box1,new Vec3(265,0,295));
+  //world.add(box1);
+  
+  Hittable box2=new Box(new Vec3(0,0,0),new Vec3(165,165,165),white);
+  box2=new RotateY(box2,-18);
+  box2=new Translate(box2,new Vec3(130,0,65));
+  //world.add(box2);
+  
+  addMeshToWorld(world,teapot,blue);
   
   return world; 
 }
@@ -382,6 +483,15 @@ hittable_list simpleLight(){
 hittable_list earth(){
   hittable_list world=new hittable_list();
   Texture earthTexture=new ImageTexture("earthmap.jpg");
+  Material earthSurface=new Lambertian(earthTexture);
+  Hittable globe=new Sphere(new Vec3(0,0,0),2,earthSurface);
+  world.add(globe);
+  
+  return world;
+}
+hittable_list spot_cow(){
+  hittable_list world=new hittable_list();
+  Texture earthTexture=new ImageTexture("spot_texture.png");
   Material earthSurface=new Lambertian(earthTexture);
   Hittable globe=new Sphere(new Vec3(0,0,0),2,earthSurface);
   world.add(globe);
@@ -442,4 +552,53 @@ hittable_list random_scene(){
   world.add(new Sphere(new Vec3(4,1,0),1.0,material3));
 
   return world;
+}
+
+Mesh addMeshObject(String s) {
+  Vec3[] verties;
+  int[] triangle;
+  int[] number;
+  int vs, ts;
+  String[] object=loadStrings(s);
+  String[] vts=object[0].split(" ");
+  vs=int(vts[0]);
+  ts=int(vts[1]);
+  verties=new Vec3[vs];
+  number=new int[ts];
+  for (int i=0; i<vs; i+=1) {
+    String[] pv=object[i+1].split(" ");
+    if (pv[0].equals("")) {
+      verties[i]=new Vec3(float(pv[1]), float(pv[2]), float(pv[3]));
+      //println(pv[1],float(pv[2]),float(pv[3]));
+    } else {
+      verties[i]=new Vec3(float(pv[0]), float(pv[1]), float(pv[2]));
+      //println(pv[0],float(pv[1]),float(pv[2]));
+    }
+  }
+  int triangleIndex=0;
+  int sum=0;
+  for (int i=0; i<ts; i+=1) {
+    String[] tv=object[i+1+vs].split(" ");
+    sum+=int(tv[0]);
+  }
+  triangle=new int[sum];
+  for (int i=0; i<ts; i+=1) {
+    String[] tv=object[i+1+vs].split(" ");
+    number[i]=int(tv[0]);
+    for (int j=0; j<int(tv[0]); j+=1) {
+      triangle[triangleIndex+j]=int(tv[j+1])-1;
+    }
+    triangleIndex+=int(tv[0]);
+  }
+  
+  for(int i=0;i<verties.length;i+=1){
+    verties[i]=Vec3.add(verties[i],translate_vector);
+    verties[i]=Vec3.add(verties[i],scale_vector);  
+  }
+  
+  
+  
+  
+
+  return new Mesh(verties, triangle, number);
 }

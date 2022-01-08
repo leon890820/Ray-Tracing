@@ -317,6 +317,7 @@ class YzRect extends Hittable{
     return true;
   }
   
+  
   boolean boundingBox(float time0,float time1, AABB outputBox){
     copyAABB(outputBox,new AABB(new Vec3(k-0.0001,y0,z0),new Vec3(k+0.0001,y1,z1)));
     return true;
@@ -325,4 +326,67 @@ class YzRect extends Hittable{
   
   
   
+}
+
+class Triangle extends Hittable{
+  Vec3 T1,T2,T3;
+  Material mp;
+  Triangle(Vec3 T1,Vec3 T2,Vec3 T3,Material m){
+    this.T1=T1;
+    this.T2=T2;
+    this.T3=T3;
+    mp=m;
+  }
+  boolean hit(Ray r, float t_min, float t_max, hit_record rec){
+    Vec3 N=Vec3.cross(Vec3.sub(T2,T1),Vec3.sub(T3,T2));
+    float t=(Vec3.dot(N,T1)-Vec3.dot(N,r.orig()))/Vec3.dot(N,r.dir());
+    if(t<t_min || t>t_max) return false;
+    
+    Vec3[] vs={T1,T2,T3};
+    for(int i=0,j=vs.length-1;i<vs.length;j=i++){
+      Vec3 a=Vec3.sub(vs[i],vs[j]);
+      float s=Vec3.dot(Vec3.sub(r.at(t),vs[j]),Vec3.cross(a,N));
+      if(s>0) return false;
+    }
+    float[] uv=calculateUV(T1,T2,T3,r.at(t));
+    rec.u=uv[0];
+    rec.v=uv[1];
+    rec.t=t;
+    rec.set_face_normal(r,N);
+    rec.mat_ptr=mp;
+    rec.p=r.at(t);
+     
+    return true;
+  }
+  float[] calculateUV(Vec3 A,Vec3 B,Vec3 C,Vec3 P){
+    float t=((B.y-C.y)*(A.x-C.x)+(C.x-B.x)*(A.y-C.y));
+    float BaryA=((B.y-C.y)*(P.x-C.x)+(C.x-B.x)*(P.y-C.y))/t;
+    float BaryB=((C.y-A.y)*(P.x-C.x)+(A.x-C.x)*(P.y-C.y))/t;
+    float BaryC=1-BaryA-BaryB;
+    float u=BaryA*0+BaryB*1+BaryC*0;
+    float v=BaryA*0+BaryB*0+BaryC*1;
+    float[] r={u,v};
+    return r;
+  }
+  
+  boolean boundingBox(float time0,float time1, AABB outputBox){
+    float min_x=min3(T1.x,T2.x,T3.x);
+    float min_y=min3(T1.y,T2.y,T3.y);
+    float min_z=min3(T1.z,T2.z,T3.z);
+    float max_x=max3(T1.x,T2.x,T3.x);
+    float max_y=max3(T1.y,T2.y,T3.y);
+    float max_z=max3(T1.z,T2.z,T3.z);
+    copyAABB(outputBox,new AABB(new Vec3(min_x-0.001,min_y-0.001,min_z-0.001),new Vec3(max_x+0.001,max_y+0.001,max_z+0.001)));
+    return true;
+   
+  }
+
+}
+
+float max3(float a,float b,float c){
+  return max(a,max(b,c));
+}
+
+float min3(float a,float b,float c){
+  return min(a,min(b,c));
 }
